@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Godstime League Pro</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#07122c;
+padding:20px;
+color:white;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+}
+
+h1{
+text-align:center;
+margin-bottom:25px;
+font-size:40px;
+color:#ffd700;
+}
+
+.card{
+background:#0d1b3d;
+padding:20px;
+border-radius:20px;
+margin-bottom:25px;
+}
+
+h2{
+color:#ffd700;
+margin-bottom:15px;
+}
+
+input,button{
+padding:10px;
+border:none;
+border-radius:8px;
+margin:5px;
+font-size:14px;
+}
+
+button{
+background:#ffd700;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+opacity:0.9;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th,td{
+padding:10px;
+text-align:center;
+border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+th{
+background:#020617;
+}
+
+.tablePlayer{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.tablePlayer img{
+width:30px;
+height:30px;
+object-fit:contain;
+}
+
+.teamBox{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+}
+
+.teamBox img{
+width:25px;
+height:25px;
+object-fit:contain;
+background:white;
+border-radius:50%;
+padding:2px;
+}
+
+.fixtureTable{
+width:100%;
+border-collapse:collapse;
+text-align:center;
+margin-top:10px;
+}
+
+.fixtureTable th{
+background:#020617;
+padding:10px;
+}
+
+.fixtureTable td{
+padding:10px;
+}
+
+.resultRow{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:10px;
+padding:10px;
+background:#13244f;
+border-radius:10px;
+flex-wrap:wrap;
+gap:10px;
+}
+
+.resultRow input{
+width:60px;
+text-align:center;
+}
+
+.top4{
+background:rgba(0,255,100,0.15);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🏆 GODSTIME LEAGUE PRO</h1>
+
+<!-- REGISTER -->
+<div class="card">
+
+<h2>📝 Registration</h2>
+
+<input id="playerName" placeholder="Player Name">
+
+<button onclick="registerPlayer()">
+Register
+</button>
+
+<p id="nextClub"></p>
+
+</div>
+
+<!-- FIXTURES -->
+<div class="card">
+
+<h2>⚽ Fixtures</h2>
+
+<input id="matchTime" placeholder="Match Time">
+
+<button onclick="generateFixtures()">
+Generate Matchday
+</button>
+
+<div id="fixtures"></div>
+
+</div>
+
+<!-- TABLE -->
+<div class="card">
+
+<h2>📊 League Table</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Pos</th>
+<th>Player</th>
+<th>P</th>
+<th>W</th>
+<th>D</th>
+<th>L</th>
+<th>GF</th>
+<th>GA</th>
+<th>GD</th>
+<th>Pts</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+</table>
+
+<br>
+
+<button onclick="resetLeague()">
+🔁 Reset League
+</button>
+
+<div id="resultsBoard"></div>
+
+</div>
+
+</div>
+
+<script>
+
+/* =========================
+20 CLUBS (ALL WORKING)
+========================= */
+
+const clubs = [
+
+["Chelsea","https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg"],
+["Arsenal","https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg"],
+["Liverpool","https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg"],
+["Manchester City","https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg"],
+["Manchester United","https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg"],
+
+["Barcelona","https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg"],
+["Real Madrid","https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg"],
+["PSG","https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg"],
+
+["AC Milan","https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg"],
+["Inter Milan","https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg"],
+
+["RB Leipzig","https://upload.wikimedia.org/wikipedia/en/0/04/RB_Leipzig_2014_logo.svg"],
+
+["Borussia Dortmund","https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg"],
+
+["Real Sociedad","https://upload.wikimedia.org/wikipedia/en/f/f1/Real_Sociedad_logo.svg"],
+
+["Ajax","https://upload.wikimedia.org/wikipedia/en/7/79/Ajax_Amsterdam.svg"],
+
+["PSV Eindhoven","https://upload.wikimedia.org/wikipedia/en/0/05/PSV_Eindhoven.svg"],
+
+["Porto","https://upload.wikimedia.org/wikipedia/en/f/f1/FC_Porto.svg"],
+
+["Benfica","https://upload.wikimedia.org/wikipedia/en/a/a2/SL_Benfica_logo.svg"],
+
+["Roma","https://upload.wikimedia.org/wikipedia/en/f/f7/AS_Roma_logo_%282017%29.svg"],
+
+["Tottenham Hotspur","https://upload.wikimedia.org/wikipedia/en/b/b4/Tottenham_Hotspur.svg"],
+
+["Napoli","https://upload.wikimedia.org/wikipedia/commons/2/2d/SSC_Neapel.svg"]
+
+];
+
+let players = [];
+let activePlayers = [];
+let fixtures = [];
+let clubIndex = 0;
+
+/* LOAD STORAGE */
+function load(){
+
+players =
+JSON.parse(localStorage.getItem("players")) || [];
+
+activePlayers =
+JSON.parse(localStorage.getItem("activePlayers")) || [];
+
+fixtures =
+JSON.parse(localStorage.getItem("fixtures")) || [];
+
+clubIndex =
+Number(localStorage.getItem("clubIndex")) || 0;
+
+document.getElementById("nextClub").innerHTML =
+"Next Club: " + clubs[clubIndex][0];
+
+renderFixtures();
+renderTable();
+renderResults();
+
+}
+
+/* SAVE STORAGE */
+function save(){
+
+localStorage.setItem(
+"players",
+JSON.stringify(players)
+);
+
+localStorage.setItem(
+"activePlayers",
+JSON.stringify(activePlayers)
+);
+
+localStorage.setItem(
+"fixtures",
+JSON.stringify(fixtures)
+);
+
+localStorage.setItem(
+"clubIndex",
+clubIndex
+);
+
+}
+
+/* REGISTER PLAYER */
+function registerPlayer(){
+
+let name =
+document.getElementById("playerName")
+.value
+.trim();
+
+if(name === ""){
+alert("Enter player name");
+return;
+}
+
+/* BLOCK DUPLICATES */
+let exists = players.some(
+p => p.player.toLowerCase() === name.toLowerCase()
+);
+
+if(exists){
+alert("Player already registered");
+return;
+}
+
+/* CREATE PLAYER */
+let obj = {
+
+player:name,
+club:clubs[clubIndex][0],
+logo:clubs[clubIndex][1],
+
+played:0,
+win:0,
+draw:0,
+loss:0,
+gf:0,
+ga:0,
+gd:0,
+pts:0
+
+};
+
+players.push(obj);
+activePlayers.push(obj);
+
+/* NEXT CLUB */
+clubIndex++;
+
+if(clubIndex >= clubs.length){
+clubIndex = 0;
+}
+
+document.getElementById("playerName").value = "";
+
+document.getElementById("nextClub").innerHTML =
+"Next Club: " + clubs[clubIndex][0];
+
+renderTable();
+save();
+
+}
+
+/* GENERATE FIXTURES */
+function generateFixtures(){
+
+let time =
+document.getElementById("matchTime").value;
+
+if(time === ""){
+alert("Add Match Time");
+return;
+}
+
+if(activePlayers.length < 2){
+alert("Not enough players");
+return;
+}
+
+fixtures = [];
+
+let pool = [...activePlayers];
+
+/* HANDLE ODD NUMBER */
+if(pool.length % 2 !== 0){
+pool.pop();
+}
+
+let shuffled =
+pool.sort(()=>Math.random()-0.5);
+
+for(let i=0;i<shuffled.length;i+=2){
+
+fixtures.push({
+home: shuffled[i],
+away: shuffled[i+1],
+played:false,
+time
+});
+
+}
+
+renderFixtures();
+renderResults();
+save();
+
+}
+
+/* RENDER FIXTURES */
+function renderFixtures(){
+
+let box =
+document.getElementById("fixtures");
+
+if(fixtures.length === 0){
+box.innerHTML = "";
+return;
+}
+
+let time = fixtures[0].time;
+
+let html = `
+
+<h3 style="
+text-align:center;
+color:#ffd700;
+margin-bottom:15px;
+">
+🕒 Match Time: ${time}
+</h3>
+
+<table class="fixtureTable">
+
+<tr>
+<th>Home</th>
+<th>VS</th>
+<th>Away</th>
+</tr>
+
+`;
+
+fixtures.forEach(f=>{
+
+html += `
+
+<tr>
+
+<td>
+<div class="teamBox">
+<img src="${f.home.logo}">
+${f.home.player}
+</div>
+</td>
+
+<td style="color:#ffd700;font-weight:bold">
+VS
+</td>
+
+<td>
+<div class="teamBox">
+<img src="${f.away.logo}">
+${f.away.player}
+</div>
+</td>
+
+</tr>
+
+`;
+
+});
+
+html += `</table>`;
+
+box.innerHTML = html;
+
+}
+
+/* SAVE RESULT */
+function saveResult(i){
+
+let f = fixtures[i];
+
+if(f.played){
+alert("Result already saved");
+return;
+}
+
+let hg =
+Number(document.getElementById("h"+i).value);
+
+let ag =
+Number(document.getElementById("a"+i).value);
+
+f.played = true;
+f.hg = hg;
+f.ag = ag;
+
+let h = f.home;
+let a = f.away;
+
+h.played++;
+a.played++;
+
+h.gf += hg;
+h.ga += ag;
+
+a.gf += ag;
+a.ga += hg;
+
+h.gd = h.gf - h.ga;
+a.gd = a.gf - a.ga;
+
+if(hg > ag){
+
+h.win++;
+h.pts += 3;
+a.loss++;
+
+}
+
+else if(ag > hg){
+
+a.win++;
+a.pts += 3;
+h.loss++;
+
+}
+
+else{
+
+h.draw++;
+a.draw++;
+
+h.pts++;
+a.pts++;
+
+}
+
+renderTable();
+renderResults();
+save();
+
+}
+
+/* TABLE */
+function renderTable(){
+
+let body =
+document.getElementById("tableBody");
+
+body.innerHTML = "";
+
+activePlayers
+.sort((a,b)=>
+
+b.pts-a.pts ||
+b.gd-a.gd ||
+b.gf-a.gf
+
+)
+
+.forEach((p,i)=>{
+
+body.innerHTML += `
+
+<tr class="${i<4?'top4':''}">
+
+<td>${i+1}</td>
+
+<td class="tablePlayer">
+<img src="${p.logo}">
+${p.player}
+</td>
+
+<td>${p.played}</td>
+<td>${p.win}</td>
+<td>${p.draw}</td>
+<td>${p.loss}</td>
+<td>${p.gf}</td>
+<td>${p.ga}</td>
+<td>${p.gd}</td>
+<td>${p.pts}</td>
+
+</tr>
+
+`;
+
+});
+
+}
+
+/* RESULTS */
+function renderResults(){
+
+let board =
+document.getElementById("resultsBoard");
+
+board.innerHTML = `
+<h3 style="
+color:#ffd700;
+margin-top:20px;
+">
+📊 Match Results
+</h3>
+`;
+
+fixtures.forEach((f,i)=>{
+
+if(!f.played){
+
+board.innerHTML += `
+
+<div class="resultRow">
+
+<div>
+<b>${f.home.player}</b>
+vs
+<b>${f.away.player}</b>
+</div>
+
+<div>
+
+<input id="h${i}" type="number">
+
+-
+
+<input id="a${i}" type="number">
+
+<button onclick="saveResult(${i})">
+Save
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+else{
+
+board.innerHTML += `
+
+<div class="resultRow">
+
+<b>${f.home.player}</b>
+
+${f.hg} - ${f.ag}
+
+<b>${f.away.player}</b>
+
+</div>
+
+`;
+
+}
+
+});
+
+}
+
+/* RESET */
+function resetLeague(){
+
+if(!confirm("Reset League?")) return;
+
+localStorage.clear();
+
+players = [];
+activePlayers = [];
+fixtures = [];
+
+clubIndex = 0;
+
+renderFixtures();
+renderTable();
+renderResults();
+
+document.getElementById("nextClub").innerHTML =
+"Next Club: " + clubs[0][0];
+
+}
+
+/* START */
+load();
+
+</script>
+
+</body>
+</html>
